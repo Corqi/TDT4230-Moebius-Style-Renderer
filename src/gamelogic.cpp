@@ -27,23 +27,16 @@ enum KeyFrameAction {
 
 #include <timestamps.h>
 
-double padPositionX = 0;
-double padPositionZ = 0;
-
 unsigned int currentKeyFrame = 0;
 unsigned int previousKeyFrame = 0;
 
 SceneNode* rootNode;
 SceneNode* boxNode;
 SceneNode* ballNode;
-SceneNode* padNode;
+SceneNode* box2Node;
 
 //Light Nodes
-SceneNode* padLightNode;
-SceneNode* cornerLightNode1;
-SceneNode* cornerLightNode2;
-
-SceneNode* textNode;
+SceneNode* LightNode;
 
 double ballRadius = 3.0f;
 
@@ -53,10 +46,10 @@ Gloom::Shader* shader;
 sf::Sound* sound;
 
 const glm::vec3 boxDimensions(180, 90, 90);
-const glm::vec3 padDimensions(30, 3, 40);
+const glm::vec3 box2Dimensions(10, 10, 10);
 
-glm::vec3 ballPosition(0, ballRadius + padDimensions.y, boxDimensions.z / 2);
-glm::vec3 ballDirection(1, 1, 0.2f);
+glm::vec3 ballPosition(0, boxDimensions.z / 2, boxDimensions.z / 2);
+// glm::vec3 ballDirection(1, 1, 0.2f);
 
 glm::vec3 cameraPosition;
 
@@ -87,23 +80,8 @@ void mouseCallback(GLFWwindow* window, double x, double y) {
 
     double deltaX = x - lastMouseX;
     double deltaY = y - lastMouseY;
-
-    padPositionX -= mouseSensitivity * deltaX / windowWidth;
-    padPositionZ -= mouseSensitivity * deltaY / windowHeight;
-
-    if (padPositionX > 1) padPositionX = 1;
-    if (padPositionX < 0) padPositionX = 0;
-    if (padPositionZ > 1) padPositionZ = 1;
-    if (padPositionZ < 0) padPositionZ = 0;
-
     glfwSetCursorPos(window, windowWidth / 2, windowHeight / 2);
 }
-
-//// A few lines to help you if you've never used c++ structs
-// struct LightSource {
-//     bool a_placeholder_value;
-// };
-// LightSource lightSources[/*Put number of light sources you want here*/];
 
 void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     buffer = new sf::SoundBuffer();
@@ -120,78 +98,41 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     shader->makeBasicShader("../res/shaders/simple.vert", "../res/shaders/simple.frag");
     shader->activate();
 
-    // Load textures
-    PNGImage fontTexture = loadPNGFile("../res/textures/charmap.png");
-    PNGImage brickTexture = loadPNGFile("../res/textures/Brick03_col.png");
-    PNGImage brickNormalTexture = loadPNGFile("../res/textures/Brick03_nrm.png");
-
     // Create meshes
-    Mesh pad = cube(padDimensions, glm::vec2(30, 40), true);
     Mesh box = cube(boxDimensions, glm::vec2(90), true, true);
+    Mesh box2 = cube(box2Dimensions, glm::vec2(90), true, false);
     Mesh sphere = generateSphere(1.0, 40, 40);
-    // Create text mesh
-    unsigned int textureID = generateTextureID(fontTexture);
-    Mesh text = generateTextGeometryBuffer("Press left click to start", float(39.0/29.0), 600.0);
-
-    unsigned int brickTextureID = generateTextureID(brickTexture);
-    unsigned int normalTextureID = generateTextureID(brickNormalTexture);
 
     // Fill buffers
     unsigned int ballVAO = generateBuffer(sphere);
     unsigned int boxVAO  = generateBuffer(box);
-    unsigned int padVAO  = generateBuffer(pad);
-    unsigned int textVAO = generateBuffer(text);
+    unsigned int box2VAO  = generateBuffer(box2);
 
     // Construct scene
     rootNode = createSceneNode();
     boxNode  = createSceneNode();
-    boxNode->nodeType = NORMAL_MAP;
-    boxNode->textureID = brickTextureID;
-    boxNode->normalTextureID = normalTextureID;
-    padNode  = createSceneNode();
-    ballNode = createSceneNode();
-    padLightNode = createSceneNode();
-    padLightNode->nodeType = POINT_LIGHT;
-    padLightNode->id = 0;
-    padLightNode->color = glm::vec3(255.0, 255.0, 255.0 );
-    // cornerLightNode1 = createSceneNode();
-    // cornerLightNode1->nodeType = POINT_LIGHT;
-    // cornerLightNode1->id = 1;
-    // cornerLightNode1->color = glm::vec3(0.0, 255.0, 0.0 );
-    // cornerLightNode2 = createSceneNode();
-    // cornerLightNode2->nodeType = POINT_LIGHT;
-    // cornerLightNode2->id = 2;
-    // cornerLightNode2->color = glm::vec3(0.0, 0.0, 255.0 );
-    textNode = createSceneNode();
-    textNode->nodeType = UI;
-    textNode->textureID = textureID;
-    //Offset for camera position
-    textNode->position = glm::vec3(windowWidth/2 - 300, windowHeight - 50, 0.0);
 
+    ballNode = createSceneNode();
+    box2Node = createSceneNode();
+    LightNode = createSceneNode();
+    LightNode->nodeType = POINT_LIGHT;
+    LightNode->id = 0;
+    LightNode->color = glm::vec3(255.0, 255.0, 255.0 );
 
 
     rootNode->children.push_back(boxNode);
-    rootNode->children.push_back(padNode);
+    rootNode->children.push_back(box2Node);
     rootNode->children.push_back(ballNode);
-    // rootNode->children.push_back(cornerLightNode1);
-    // rootNode->children.push_back(cornerLightNode2);
-    rootNode->children.push_back(textNode);
-    padNode->children.push_back(padLightNode);
+    rootNode->children.push_back(LightNode);
 
     boxNode->vertexArrayObjectID  = boxVAO;
     boxNode->VAOIndexCount        = box.indices.size();
 
-    padNode->vertexArrayObjectID  = padVAO;
-    padNode->VAOIndexCount        = pad.indices.size();
-
     ballNode->vertexArrayObjectID = ballVAO;
     ballNode->VAOIndexCount       = sphere.indices.size();
 
-    textNode->vertexArrayObjectID = textVAO;
-    textNode->VAOIndexCount       = text.indices.size();
-
-
-
+    box2Node->vertexArrayObjectID = box2VAO;
+    box2Node->VAOIndexCount       = box2.indices.size();
 
 
     getTimeDeltaSeconds();
@@ -206,9 +147,9 @@ void updateFrame(GLFWwindow* window) {
 
     double timeDelta = getTimeDeltaSeconds();
 
-    const float ballBottomY = boxNode->position.y - (boxDimensions.y/2) + ballRadius + padDimensions.y;
+    // const float ballBottomY = boxNode->position.y - (boxDimensions.y/2) + ballRadius + padDimensions.y;
     const float ballTopY    = boxNode->position.y + (boxDimensions.y/2) - ballRadius;
-    const float BallVerticalTravelDistance = ballTopY - ballBottomY;
+    // const float BallVerticalTravelDistance = ballTopY - ballBottomY;
 
     const float cameraWallOffset = 30; // Arbitrary addition to prevent ball from going too much into camera
 
@@ -245,10 +186,6 @@ void updateFrame(GLFWwindow* window) {
             gameElapsedTime = debug_startTime;
             hasStarted = true;
         }
-
-        ballPosition.x = ballMinX + (1 - padPositionX) * (ballMaxX - ballMinX);
-        ballPosition.y = ballBottomY;
-        ballPosition.z = ballMinZ + (1 - padPositionZ) * ((ballMaxZ+cameraWallOffset) - ballMinZ);
     } else {
         totalElapsedTime += timeDelta;
         if(hasLost) {
@@ -296,64 +233,16 @@ void updateFrame(GLFWwindow* window) {
             KeyFrameAction currentOrigin = keyFrameDirections.at(currentKeyFrame);
             KeyFrameAction currentDestination = keyFrameDirections.at(currentKeyFrame + 1);
 
-            // Synchronize ball with music
-            if (currentOrigin == BOTTOM && currentDestination == BOTTOM) {
-                ballYCoord = ballBottomY;
-            } else if (currentOrigin == TOP && currentDestination == TOP) {
-                ballYCoord = ballBottomY + BallVerticalTravelDistance;
-            } else if (currentDestination == BOTTOM) {
-                ballYCoord = ballBottomY + BallVerticalTravelDistance * (1 - fractionFrameComplete);
-            } else if (currentDestination == TOP) {
-                ballYCoord = ballBottomY + BallVerticalTravelDistance * fractionFrameComplete;
-            }
-
-            // Make ball move
-            const float ballSpeed = 60.0f;
-            ballPosition.x += timeDelta * ballSpeed * ballDirection.x;
-            ballPosition.y = ballYCoord;
-            ballPosition.z += timeDelta * ballSpeed * ballDirection.z;
-
-            // Make ball bounce
-            if (ballPosition.x < ballMinX) {
-                ballPosition.x = ballMinX;
-                ballDirection.x *= -1;
-            } else if (ballPosition.x > ballMaxX) {
-                ballPosition.x = ballMaxX;
-                ballDirection.x *= -1;
-            }
-            if (ballPosition.z < ballMinZ) {
-                ballPosition.z = ballMinZ;
-                ballDirection.z *= -1;
-            } else if (ballPosition.z > ballMaxZ) {
-                ballPosition.z = ballMaxZ;
-                ballDirection.z *= -1;
-            }
-
-            if(options.enableAutoplay) {
-                padPositionX = 1-(ballPosition.x - ballMinX) / (ballMaxX - ballMinX);
-                padPositionZ = 1-(ballPosition.z - ballMinZ) / ((ballMaxZ+cameraWallOffset) - ballMinZ);
-            }
-
-            // Check if the ball is hitting the pad when the ball is at the bottom.
-            // If not, you just lost the game! (hehe)
-            if (jumpedToNextFrame && currentOrigin == BOTTOM && currentDestination == TOP) {
-                double padLeftX  = boxNode->position.x - (boxDimensions.x/2) + (1 - padPositionX) * (boxDimensions.x - padDimensions.x);
-                double padRightX = padLeftX + padDimensions.x;
-                double padFrontZ = boxNode->position.z - (boxDimensions.z/2) + (1 - padPositionZ) * (boxDimensions.z - padDimensions.z);
-                double padBackZ  = padFrontZ + padDimensions.z;
-
-                if (   ballPosition.x < padLeftX
-                    || ballPosition.x > padRightX
-                    || ballPosition.z < padFrontZ
-                    || ballPosition.z > padBackZ
-                ) {
-                    hasLost = true;
-                    if (options.enableMusic) {
-                        sound->stop();
-                        delete sound;
-                    }
-                }
-            }
+            // // Synchronize ball with music
+            // if (currentOrigin == BOTTOM && currentDestination == BOTTOM) {
+            //     ballYCoord = ballBottomY;
+            // } else if (currentOrigin == TOP && currentDestination == TOP) {
+            //     ballYCoord = ballBottomY + BallVerticalTravelDistance;
+            // } else if (currentDestination == BOTTOM) {
+            //     ballYCoord = ballBottomY + BallVerticalTravelDistance * (1 - fractionFrameComplete);
+            // } else if (currentDestination == TOP) {
+            //     ballYCoord = ballBottomY + BallVerticalTravelDistance * fractionFrameComplete;
+            // }
         }
     }
 
@@ -362,9 +251,9 @@ void updateFrame(GLFWwindow* window) {
     cameraPosition = glm::vec3(0, 2, -20);
 
     // Some math to make the camera move in a nice way
-    float lookRotation = -0.6 / (1 + exp(-5 * (padPositionX-0.5))) + 0.3;
+    float lookRotation = 0.1;
     glm::mat4 cameraTransform =
-                    glm::rotate(0.3f + 0.2f * float(-padPositionZ*padPositionZ), glm::vec3(1, 0, 0)) *
+                    glm::rotate(0.3f, glm::vec3(1, 0, 0)) *
                     glm::rotate(lookRotation, glm::vec3(0, 1, 0)) *
                     glm::translate(-cameraPosition);
 
@@ -399,21 +288,24 @@ void updateFrame(GLFWwindow* window) {
     //     boxNode->position.z
     // };
 
-    ballNode->position = ballPosition;
+    ballNode->position = {
+        boxNode->position.x - 20,
+        boxNode->position.y - 37.5,
+        boxNode->position.z
+    };
     ballNode->scale = glm::vec3(ballRadius);
     ballNode->rotation = { 0, totalElapsedTime*2, 0 };
 
-    padNode->position  = {
-        boxNode->position.x - (boxDimensions.x/2) + (padDimensions.x/2) + (1 - padPositionX) * (boxDimensions.x - padDimensions.x),
-        boxNode->position.y - (boxDimensions.y/2) + (padDimensions.y/2),
-        boxNode->position.z - (boxDimensions.z/2) + (padDimensions.z/2) + (1 - padPositionZ) * (boxDimensions.z - padDimensions.z)
+    box2Node->position = {
+        boxNode->position.x - 15,
+        boxNode->position.y - 17.5,
+        boxNode->position.z
     };
 
-    // Move padLight above padNode
-    padLightNode->position = {
-        padNode->position.x, 
-        padNode->position.y + 6, 
-        padNode->position.z    
+    LightNode->position  = {
+        boxNode->position.x + 10,
+        boxNode->position.y - 37.5,
+        boxNode->position.z + 10
     };
 
     
@@ -424,9 +316,6 @@ void updateFrame(GLFWwindow* window) {
     glm::mat4 orthoProjection = glm::ortho(0.0f, float(windowWidth),
                                            0.0f, float(windowHeight),
                                           -1.0f, 1.0f);
-
-    //Update UI elements
-    updateNodeTransformations(textNode, glm::identity<glm::mat4>(), orthoProjection); 
 }
 
 void updateNodeTransformations(SceneNode* node, glm::mat4 transformationThusFar, glm::mat4 viewTransformation) {
@@ -482,10 +371,7 @@ void renderNode(SceneNode* node) {
         case POINT_LIGHT:
             // Calculate light position
             glm::vec3 lightPosition;
-            if (node->id == 0)
-                lightPosition = glm::vec3(padNode->modelMatrix  * glm::vec4(0.0, 6.0, 0.0, 1.0));
-            else
-                lightPosition = glm::vec3(node->modelMatrix  * glm::vec4(0.0, 0.0, 0.0, 1.0));
+            lightPosition = glm::vec3(node->modelMatrix  * glm::vec4(0.0, 0.0, 0.0, 1.0));
 
             glUniform3fv(shader->getUniformFromName("light_source[" + std::to_string(node->id) + "].position"), 1, glm::value_ptr(lightPosition)); 
             glUniform3fv(shader->getUniformFromName("light_source[" + std::to_string(node->id) + "].color"), 1, glm::value_ptr(node->color));
