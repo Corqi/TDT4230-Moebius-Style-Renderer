@@ -35,6 +35,11 @@ SceneNode* boxNode;
 SceneNode* ballNode;
 SceneNode* box2Node;
 
+unsigned int FBO;
+unsigned int RBO;
+unsigned int rectVAO, rectVBO;
+unsigned int framebufferTexture;
+
 //Light Nodes
 SceneNode* LightNode;
 
@@ -43,10 +48,22 @@ double ballRadius = 3.0f;
 // These are heap allocated, because they should not be initialised at the start of the program
 sf::SoundBuffer* buffer;
 Gloom::Shader* shader;
+Gloom::Shader* shaderPP;
 sf::Sound* sound;
 
 const glm::vec3 boxDimensions(180, 90, 90);
 const glm::vec3 box2Dimensions(10, 10, 10);
+
+float rectangleVertices[] = {
+    // Coords       // texCoords
+    -1.0f, -1.0f,   0.0f, 0.0f,
+    1.0f, -1.0f,   1.0f, 0.0f,
+    -1.0f, 1.0f,   0.0f, 1.0f,
+    
+    1.0f, -1.0f,    1.0f, 0.0f,
+    1.0f, 1.0f,   1.0f, 1.0f,
+    -1.0f, 1.0f,   0.0f, 1.0f
+};
 
 glm::vec3 ballPosition(0, boxDimensions.z / 2, boxDimensions.z / 2);
 // glm::vec3 ballDirection(1, 1, 0.2f);
@@ -98,6 +115,12 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     shader->makeBasicShader("../res/shaders/simple.vert", "../res/shaders/simple.frag");
     shader->activate();
 
+    // Post-processing shader
+    shaderPP = new Gloom::Shader();
+    shaderPP->makeBasicShader("../res/shaders/framebuffer.vert", "../res/shaders/framebuffer.frag");
+    shaderPP->activate();
+    glUniform1i(shaderPP->getUniformFromName("screenTexture"), 0);
+
     // Create meshes
     Mesh box = cube(boxDimensions, glm::vec2(90), true, true);
     Mesh box2 = cube(box2Dimensions, glm::vec2(90), true, false);
@@ -107,6 +130,42 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     unsigned int ballVAO = generateBuffer(sphere);
     unsigned int boxVAO  = generateBuffer(box);
     unsigned int box2VAO  = generateBuffer(box2);
+
+    glGenVertexArrays(1, &rectVAO);
+    glGenBuffers(1, &rectVBO);
+    glBindVertexArray(rectVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, rectVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), &rectangleVertices, GL_STATIC_DRAW);
+    
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+   
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+
+    // Post-processing buffer
+    glGenFramebuffers(1, &FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+    glGenTextures(1, &framebufferTexture);
+	glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+
+    glGenRenderbuffers(1, &RBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, windowWidth, windowHeight);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+
+    auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Framebuffer error: " << fboStatus << std::endl;
+
 
     // Construct scene
     rootNode = createSceneNode();
@@ -343,6 +402,7 @@ void updateNodeTransformations(SceneNode* node, glm::mat4 transformationThusFar,
 }
 
 void renderNode(SceneNode* node) {
+    // shader->activate();
     // MVP
     glUniformMatrix4fv(3, 1, GL_FALSE, glm::value_ptr(node->currentTransformationMatrix));
     // Model matrix
@@ -409,5 +469,25 @@ void renderFrame(GLFWwindow* window) {
     glfwGetWindowSize(window, &windowWidth, &windowHeight);
     glViewport(0, 0, windowWidth, windowHeight);
 
+
+    // Render scene to framebuffer
+
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+    glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    
+    shader->activate();
     renderNode(rootNode);
+
+    // Post-processing pass
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
+
+    shaderPP->activate();
+    glBindVertexArray(rectVAO); 
+    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 6);    
 }

@@ -32,7 +32,7 @@ void runProgram(GLFWwindow* window, CommandLineOptions options)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Set default colour after clearing the colour buffer
-    glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
+    // glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
 
 	initGame(window, options);
 
@@ -40,7 +40,7 @@ void runProgram(GLFWwindow* window, CommandLineOptions options)
     while (!glfwWindowShouldClose(window))
     {
 	    // Clear colour and depth buffers
-	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
         updateFrame(window);

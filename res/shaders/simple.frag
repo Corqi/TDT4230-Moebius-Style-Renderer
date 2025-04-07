@@ -10,7 +10,7 @@ in layout(location = 1) vec2 textureCoordinates;
 in layout(location = 2) vec3 fragment_position;
 in layout(location = 3) mat3 TBN_matrix;
 
-#define number_lights 3
+#define number_lights 1
 uniform LightSource light_source[number_lights];
 
 uniform layout(location = 6) vec3 camera_position;
@@ -112,7 +112,8 @@ void main()
         color =  calculateLight(normal_out) * texture(textureSample, textureCoordinates);
     }
     else {
-        color = calculateLight(normal_out);
+        // color = calculateLight(normal_out);
+        color = vec4(0.5 * normal_out + 0.5, 1.0);
     }
     
 }
