@@ -24,6 +24,8 @@ layout(binding = 0) uniform sampler2D textureSample;
 layout(binding = 1) uniform sampler2D normalSample;
 
 out vec4 color;
+out vec4 normalTexture;
+out vec4 depthTexture;
 
 float rand(vec2 co) { return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453); }
 float dither(vec2 uv) { return (rand(uv)*2.0-1.0) / 256.0; }
@@ -94,6 +96,14 @@ vec4 calculateLight(vec3 normal_out){
     return color;
 }
 
+float near = 0.1f;
+float far = 100.0f;
+
+float linearizeDepth(float depth)
+{
+	return (2.0 * near * far) / (far + near - (depth * 2.0 - 1.0) * (far - near));
+}
+
 void main()
 {
     // Normalize normals 2nd time
@@ -112,8 +122,11 @@ void main()
         color =  calculateLight(normal_out) * texture(textureSample, textureCoordinates);
     }
     else {
-        // color = calculateLight(normal_out);
-        color = vec4(0.5 * normal_out + 0.5, 1.0);
+        color = calculateLight(normal_out);
+        //color = vec4(0.5 * normal_out + 0.5, 1.0);
+        // color = vec4(vec3(gl_FragCoord.z), 1.0f);
     }
     
+    normalTexture = vec4(0.5 * normal_out + 0.5, 1.0);
+    depthTexture = vec4(vec3(linearizeDepth(gl_FragCoord.z) / far), 1.0);
 }

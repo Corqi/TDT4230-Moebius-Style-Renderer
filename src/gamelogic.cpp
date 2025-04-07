@@ -39,6 +39,8 @@ unsigned int FBO;
 unsigned int RBO;
 unsigned int rectVAO, rectVBO;
 unsigned int framebufferTexture;
+unsigned int normalTexture;
+unsigned int depthTexture;
 
 //Light Nodes
 SceneNode* LightNode;
@@ -120,6 +122,8 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     shaderPP->makeBasicShader("../res/shaders/framebuffer.vert", "../res/shaders/framebuffer.frag");
     shaderPP->activate();
     glUniform1i(shaderPP->getUniformFromName("screenTexture"), 0);
+    glUniform1i(shaderPP->getUniformFromName("normalTexture"), 1);
+    glUniform1i(shaderPP->getUniformFromName("depthTexture"), 2);
 
     // Create meshes
     Mesh box = cube(boxDimensions, glm::vec2(90), true, true);
@@ -156,6 +160,24 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+
+    // Generate normaltexture and depthtexture for post-processing
+    glGenTextures(1, &normalTexture);
+    glBindTexture(GL_TEXTURE_2D, normalTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalTexture, 0);
+
+    glGenTextures(1, &depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, windowWidth, windowHeight, 0,  GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, depthTexture, 0);
+
+    GLenum attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+    glDrawBuffers(3, attachments);
 
     glGenRenderbuffers(1, &RBO);
     glBindRenderbuffer(GL_RENDERBUFFER, RBO);
@@ -487,7 +509,12 @@ void renderFrame(GLFWwindow* window) {
     glDisable(GL_DEPTH_TEST);
 
     shaderPP->activate();
-    glBindVertexArray(rectVAO); 
+    glBindVertexArray(rectVAO);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, normalTexture);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);    
 }
