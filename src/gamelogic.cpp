@@ -130,7 +130,10 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     Mesh box = cube(boxDimensions, glm::vec2(90), true, true);
     Mesh box2 = cube(box2Dimensions, glm::vec2(90), true, false);
     Mesh sphere = generateSphere(1.0, 40, 40);
-    Mesh cactus = loadModel("../res/models/Cactus1.gltf");
+
+    PNGImage cactusTexture = loadPNGFile("../res/textures/Cactus1_col.png");
+    unsigned int cactusTextureID = generateTextureID(cactusTexture);
+    Mesh cactus = loadModel("../res/models/cactus1.glb");
 
     // Fill buffers
     unsigned int ballVAO = generateBuffer(sphere);
@@ -200,6 +203,8 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     box2Node = createSceneNode();
     cactusNode = createSceneNode();
     cactusNode->scale = glm::vec3(10.0f);
+    cactusNode->nodeType = NORMAL_MAP;
+    cactusNode->textureID = cactusTextureID;
     LightNode = createSceneNode();
     LightNode->nodeType = POINT_LIGHT;
     LightNode->id = 0;
@@ -487,7 +492,7 @@ void renderNode(SceneNode* node) {
         case NORMAL_MAP:
             glUniform1i(10, true);
             glBindTextureUnit(0, node->textureID);
-            glBindTextureUnit(1, node->normalTextureID);
+            // glBindTextureUnit(1, node->normalTextureID);
 
             if (node->vertexArrayObjectID != -1) {
                 glBindVertexArray(node->vertexArrayObjectID);

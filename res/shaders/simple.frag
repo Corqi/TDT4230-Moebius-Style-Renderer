@@ -115,11 +115,41 @@ void main()
     }
     else if (is_normal_map){
         // Use normal map texture
-        vec3 normalFromMap = texture(normalSample, textureCoordinates).rgb;
+        //vec3 normalFromMap = texture(normalSample, textureCoordinates).rgb;
         // Convert to [-1, 1] range
-        normal_out = normalize(TBN_matrix * (normalFromMap * 2.0 - 1.0));
+        // normal_out = normalize(TBN_matrix * (normalFromMap * 2.0 - 1.0));
 
-        color =  calculateLight(normal_out) * texture(textureSample, textureCoordinates);
+        // Compute lighting color
+        vec3 litColor = calculateLight(normal_out).rgb;
+
+        // Calculate brightness (luminance)
+        float brightness = dot(litColor, vec3(0.299, 0.587, 0.114));
+
+        color =  texture(textureSample, textureCoordinates);
+
+        if (brightness < 0.75) {
+            if (mod(gl_FragCoord.y, 5.0) <= 1.0) {
+                color = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+        }
+
+        if (brightness < 0.50) {
+            if (mod(gl_FragCoord.x, 5.0) <= 1.0) {
+                color = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+        }
+        
+        if (brightness < 0.35) {
+            if (mod(gl_FragCoord.x + gl_FragCoord.y, 5.0) == 0.0) {
+                color = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+        }
+        
+        if (brightness < 0.12) {
+            if (mod(gl_FragCoord.x - gl_FragCoord.y, 5.0) == 0.0) {
+                color = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+        }
     }
     else {
         // Compute lighting color
