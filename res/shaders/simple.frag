@@ -122,10 +122,50 @@ void main()
         color =  calculateLight(normal_out) * texture(textureSample, textureCoordinates);
     }
     else {
-        color = calculateLight(normal_out);
-        //color = vec4(0.5 * normal_out + 0.5, 1.0);
-        // color = vec4(vec3(gl_FragCoord.z), 1.0f);
+        // Compute lighting color
+        vec3 litColor = calculateLight(normal_out).rgb;
+
+        // Calculate brightness (luminance)
+        float brightness = dot(litColor, vec3(0.299, 0.587, 0.114));
+        
+        
+        color = vec4(1.0, 1.0, 1.0, 1.0);
+     
+     /*
+        if (brightness < 1.00) {
+            if (mod(gl_FragCoord.x + gl_FragCoord.y, 10.0) == 0.0) {
+                color = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+        }*/
+        
+        if (brightness < 0.75) {
+            if (mod(gl_FragCoord.y, 5.0) <= 1.0) {
+                color = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+        }
+
+        if (brightness < 0.50) {
+            if (mod(gl_FragCoord.x, 5.0) <= 1.0) {
+                color = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+        }
+        
+        if (brightness < 0.35) {
+            if (mod(gl_FragCoord.x + gl_FragCoord.y, 5.0) == 0.0) {
+                color = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+        }
+        
+        if (brightness < 0.12) {
+            if (mod(gl_FragCoord.x - gl_FragCoord.y, 5.0) == 0.0) {
+                color = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+        }
+
+        // debug
+        //color = calculateLight(normal_out);
     }
+
     
     normalTexture = vec4(0.5 * normal_out + 0.5, 1.0);
     depthTexture = vec4(vec3(linearizeDepth(gl_FragCoord.z) / far), 1.0);
