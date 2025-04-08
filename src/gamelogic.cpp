@@ -34,6 +34,7 @@ SceneNode* rootNode;
 SceneNode* boxNode;
 SceneNode* ballNode;
 SceneNode* box2Node;
+SceneNode* cactusNode;
 
 unsigned int FBO;
 unsigned int RBO;
@@ -129,11 +130,13 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     Mesh box = cube(boxDimensions, glm::vec2(90), true, true);
     Mesh box2 = cube(box2Dimensions, glm::vec2(90), true, false);
     Mesh sphere = generateSphere(1.0, 40, 40);
+    Mesh cactus = loadModel("../res/models/Cactus1.gltf");
 
     // Fill buffers
     unsigned int ballVAO = generateBuffer(sphere);
     unsigned int boxVAO  = generateBuffer(box);
     unsigned int box2VAO  = generateBuffer(box2);
+    unsigned int cactus1VAO = generateBuffer(cactus);
 
     glGenVertexArrays(1, &rectVAO);
     glGenBuffers(1, &rectVBO);
@@ -195,6 +198,8 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
 
     ballNode = createSceneNode();
     box2Node = createSceneNode();
+    cactusNode = createSceneNode();
+    cactusNode->scale = glm::vec3(10.0f);
     LightNode = createSceneNode();
     LightNode->nodeType = POINT_LIGHT;
     LightNode->id = 0;
@@ -203,6 +208,7 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
 
     rootNode->children.push_back(boxNode);
     rootNode->children.push_back(box2Node);
+    rootNode->children.push_back(cactusNode);
     rootNode->children.push_back(ballNode);
     rootNode->children.push_back(LightNode);
 
@@ -214,6 +220,9 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
 
     box2Node->vertexArrayObjectID = box2VAO;
     box2Node->VAOIndexCount       = box2.indices.size();
+
+    cactusNode->vertexArrayObjectID = cactus1VAO;
+    cactusNode->VAOIndexCount       = cactus.indices.size();
 
 
     getTimeDeltaSeconds();
@@ -379,6 +388,12 @@ void updateFrame(GLFWwindow* window) {
 
     box2Node->position = {
         boxNode->position.x - 15,
+        boxNode->position.y - 17.5,
+        boxNode->position.z
+    };
+
+    cactusNode->position = {
+        boxNode->position.x + 30,
         boxNode->position.y - 17.5,
         boxNode->position.z
     };

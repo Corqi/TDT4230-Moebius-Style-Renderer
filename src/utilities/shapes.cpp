@@ -1,5 +1,8 @@
 #include <iostream>
 #include "shapes.h"
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265359f
@@ -251,5 +254,56 @@ Mesh generateSphere(float sphereRadius, int slices, int layers) {
     mesh.normals = normals;
     mesh.indices = indices;
     mesh.textureCoordinates = uvs;
+    return mesh;
+}
+
+Mesh loadModel(const std::string& path) {
+    Assimp::Importer importer;
+
+    // Load the model with postprocessing flags
+    const aiScene* scene = importer.ReadFile(path,
+        aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
+
+    if (!scene) {
+        std::cerr << "Error loading model: " << importer.GetErrorString() << std::endl;
+        return Mesh();  // Return an empty mesh on error
+    }
+
+    Mesh mesh;
+
+    // Loop over all the meshes in the scene
+    for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+        aiMesh* ai_mesh = scene->mMeshes[i];
+
+        // Get vertices
+        for (unsigned int j = 0; j < ai_mesh->mNumVertices; j++) {
+            aiVector3D ai_vertex = ai_mesh->mVertices[j];
+            mesh.vertices.push_back(glm::vec3(ai_vertex.x, ai_vertex.y, ai_vertex.z));
+
+            // Get normals (if present)
+            if (ai_mesh->HasNormals()) {
+                aiVector3D ai_normal = ai_mesh->mNormals[j];
+                mesh.normals.push_back(glm::vec3(ai_normal.x, ai_normal.y, ai_normal.z));
+            }
+
+            // Get texture coordinates (if present)
+            if (ai_mesh->HasTextureCoords(0)) {
+                aiVector3D ai_texCoord = ai_mesh->mTextureCoords[0][j];
+                mesh.textureCoordinates.push_back(glm::vec2(ai_texCoord.x, ai_texCoord.y));
+            }
+        }
+
+        // Get indices
+        for (unsigned int j = 0; j < ai_mesh->mNumFaces; j++) {
+            aiFace face = ai_mesh->mFaces[j];
+            for (unsigned int k = 0; k < face.mNumIndices; k++) {
+                mesh.indices.push_back(face.mIndices[k]);
+            }
+        }
+    }
+
+    // Optional: Compute tangents and bitangents here using your `computeTangentBasis` function
+    // computeTangentBasis(mesh.vertices, mesh.textureCoordinates, mesh.normals, mesh.tangents, mesh.bitangents);
+
     return mesh;
 }
