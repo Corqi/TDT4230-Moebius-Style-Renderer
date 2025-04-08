@@ -262,7 +262,7 @@ Mesh loadModel(const std::string& path) {
 
     // Load the model with postprocessing flags
     const aiScene* scene = importer.ReadFile(path,
-        aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
+        aiProcess_Triangulate | aiProcess_GenNormals);
 
     if (!scene) {
         std::cerr << "Error loading model: " << importer.GetErrorString() << std::endl;
