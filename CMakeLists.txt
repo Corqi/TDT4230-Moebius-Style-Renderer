@@ -78,6 +78,14 @@ if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/glad/include)
 endif()
 
 #
+# Assimp
+#
+option(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+option(ASSIMP_BUILD_TESTS OFF)
+option(ASSIMP_INSTALL OFF)
+add_subdirectory(lib/assimp)
+
+#
 # Set include paths
 #
 include_directories (src/
@@ -87,7 +95,8 @@ include_directories (src/
                      lib/glm/
                      lib/stb/
                      lib/arrrgh/
-                     lib/SFML/include/)
+                     lib/SFML/include/
+                     lib/assimp/include/)
 
 
 #
@@ -130,6 +139,7 @@ target_link_libraries (${PROJECT_NAME}
                        glfw
                        sfml-audio
                        fmt::fmt
+                       assimp
                        ${GLFW_LIBRARIES}
                        ${GLAD_LIBRARIES})
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT glowbox)
