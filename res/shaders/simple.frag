@@ -14,8 +14,8 @@ in layout(location = 3) mat3 TBN_matrix;
 uniform LightSource light_source[number_lights];
 
 uniform layout(location = 6) vec3 camera_position;
-uniform layout(location = 7) vec3 ball_position;
-uniform layout(location = 8) double ball_radius;
+// uniform layout(location = 7) vec3 ball_position;
+// uniform layout(location = 8) double ball_radius;
 
 uniform layout(location = 9) bool is_UI;
 uniform layout(location = 10) bool is_normal_map;
@@ -51,6 +51,7 @@ vec4 calculateLight(vec3 normal_out){
         float L = 1 / (la + lb*d + lc*pow(d,2));
 
         // Calculate shadows
+        /*
         float soft_shadow_radius = float(ball_radius) * 1.3;
 
         vec3 light_distance = light_source[i].position - fragment_position;
@@ -67,7 +68,7 @@ vec4 calculateLight(vec3 normal_out){
                 float t = (rejection_length - float(ball_radius)) / (soft_shadow_radius - float(ball_radius));
                 shadow_strenght = mix(0.0, 1.0, t);
             }
-        }
+        }*/
 
         // Calculate diffuse
         vec3 light_direction = normalize(light_source[i].position - fragment_position);
@@ -75,7 +76,7 @@ vec4 calculateLight(vec3 normal_out){
         // vec3 diffuse_color = vec3(255.0, 255.0, 255.0) / 255.0;
         vec3 diffuse_color = light_source[i].color / 255.0;
 
-        diffuse += diffuse_intensity * diffuse_color * L * shadow_strenght;
+        diffuse += diffuse_intensity * diffuse_color * L;
 
         // Calculate specular
         vec3 reflect_direction = reflect(-light_direction, normal_out);
@@ -84,7 +85,7 @@ vec4 calculateLight(vec3 normal_out){
         // vec3 specular_color = vec3(255.0, 255.0, 255.0) / 255.0;
         vec3 specular_color = light_source[i].color / 255.0;
 
-        specular += specular_intensity * specular_color * L * shadow_strenght;
+        specular += specular_intensity * specular_color * L;
     }
 
     // Dither
@@ -150,6 +151,9 @@ void main()
                 color = vec4(0.0, 0.0, 0.0, 1.0);
             }
         }
+
+        //debug
+        //color = vec4(0.5 * normal_out + 0.5, 1.0);
     }
     else {
         // Compute lighting color
