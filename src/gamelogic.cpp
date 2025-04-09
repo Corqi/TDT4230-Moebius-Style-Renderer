@@ -42,6 +42,7 @@ SceneNode* rock03Node;
 SceneNode* bizonBonesNode;
 SceneNode* bizonSkullNode;
 SceneNode* terrainNode;
+SceneNode* LightNode;
 
 
 unsigned int FBO;
@@ -51,8 +52,6 @@ unsigned int framebufferTexture;
 unsigned int normalTexture;
 unsigned int depthTexture;
 
-//Light Nodes
-SceneNode* LightNode;
 
 // These are heap allocated, because they should not be initialised at the start of the program
 sf::SoundBuffer* buffer;
@@ -74,47 +73,7 @@ float rectangleVertices[] = {
 
 glm::vec3 cameraPosition;
 
-CommandLineOptions options;
-
-bool hasStarted        = false;
-bool hasLost           = false;
-bool jumpedToNextFrame = false;
-bool isPaused          = false;
-
-bool mouseLeftPressed   = false;
-bool mouseLeftReleased  = false;
-bool mouseRightPressed  = false;
-bool mouseRightReleased = false;
-
-// Modify if you want the music to start further on in the track. Measured in seconds.
-const float debug_startTime = 0;
-double totalElapsedTime = debug_startTime;
-double gameElapsedTime = debug_startTime;
-
-double mouseSensitivity = 1.0;
-double lastMouseX = windowWidth / 2;
-double lastMouseY = windowHeight / 2;
-void mouseCallback(GLFWwindow* window, double x, double y) {
-    int windowWidth, windowHeight;
-    glfwGetWindowSize(window, &windowWidth, &windowHeight);
-    glViewport(0, 0, windowWidth, windowHeight);
-
-    double deltaX = x - lastMouseX;
-    double deltaY = y - lastMouseY;
-    glfwSetCursorPos(window, windowWidth / 2, windowHeight / 2);
-}
-
 void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
-    buffer = new sf::SoundBuffer();
-    if (!buffer->loadFromFile("../res/Hall of the Mountain King.ogg")) {
-        return;
-    }
-
-    options = gameOptions;
-
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-    glfwSetCursorPosCallback(window, mouseCallback);
-
     shader = new Gloom::Shader();
     shader->makeBasicShader("../res/shaders/simple.vert", "../res/shaders/simple.frag");
     shader->activate();
@@ -128,7 +87,6 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     glUniform1i(shaderPP->getUniformFromName("depthTexture"), 2);
 
     // Create meshes
-
     PNGImage cactusFlowerTexture = loadPNGFile("../res/textures/CactusFlower_col.png");
     unsigned int cactusFlowerTextureID = generateTextureID(cactusFlowerTexture);
     Mesh cactusFlower = loadModel("../res/models/CactusFlower.glb");
@@ -230,120 +188,120 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
 
     terrainNode = createSceneNode();
     terrainNode->scale = glm::vec3(10.0f);
-    terrainNode->nodeType = NORMAL_MAP;
+    terrainNode->nodeType = TEXTURE_MAP;
     terrainNode->textureID = terrainTextureID;
     terrainNode->position = {
-        0, 0, 0
+        0.0f, 0.0f, 0.0f
     };
     terrainNode->rotation = {
-        0, 180, 0
+        0.0f, 180.0f, 0.0f
     };
 
     cactusFlowerNode = createSceneNode();
     cactusFlowerNode->scale = glm::vec3(0.7f);
-    cactusFlowerNode->nodeType = NORMAL_MAP;
+    cactusFlowerNode->nodeType = TEXTURE_MAP;
     cactusFlowerNode->textureID = cactusFlowerTextureID;
     cactusFlowerNode->position = {
-        11, 1, -8
+        11.0f, 1.0f, -8.0f
     };
     cactusFlowerNode->rotation = {
-        0, 0.55f, 0
+        0.0f, 0.55f, 0.0f
     };
 
     cactus01Node = createSceneNode();
     cactus01Node->scale = glm::vec3(0.7f);
-    cactus01Node->nodeType = NORMAL_MAP;
+    cactus01Node->nodeType = TEXTURE_MAP;
     cactus01Node->textureID = cactusTextureID;
     cactus01Node->position = {
-        16, 1, 0.5
+        16.0f, 1.0f, 0.5f
     };
     cactus01Node->rotation = {
-        0, -0.85f, 0
+        0.0f, -0.85f, 0.0f
     };
 
     cactus02Node = createSceneNode();
     cactus02Node->scale = glm::vec3(0.7f);
-    cactus02Node->nodeType = NORMAL_MAP;
+    cactus02Node->nodeType = TEXTURE_MAP;
     cactus02Node->textureID = cactusTextureID;
     cactus02Node->position = {
-        11, 1, 1
+        11.0f, 1.0f, 1.0f
     };
     cactus02Node->rotation = {
-        0, 0.3f, 0
+        0.0f, 0.3f, 0.0f
     };
 
     rock01Node = createSceneNode();
     rock01Node->scale = glm::vec3(0.7f);
-    rock01Node->nodeType = NORMAL_MAP;
+    rock01Node->nodeType = TEXTURE_MAP;
     rock01Node->textureID = rock01TextureID;
     rock01Node->position = {
-        15.5f, -0.5, -3
+        15.5f, -0.5f, -3.0f
     };
     rock01Node->rotation = {
-        0, 0.6f, 0
+        0.0f, 0.6f, 0.0f
     };
 
     rock02Node = createSceneNode();
     rock02Node->scale = glm::vec3(2.0f);
-    rock02Node->nodeType = NORMAL_MAP;
+    rock02Node->nodeType = TEXTURE_MAP;
     rock02Node->textureID = rock02TextureID;
     rock02Node->position = {
-        16.0f, 1, 6
+        16.0f, 1.0f, 6.0f
     };
     rock02Node->rotation = {
-        0, 0, 0
+        0.0f, 0.0f, 0.0f
     };
 
     rock02_1Node = createSceneNode();
     rock02_1Node->scale = glm::vec3(2.0f);
-    rock02_1Node->nodeType = NORMAL_MAP;
+    rock02_1Node->nodeType = TEXTURE_MAP;
     rock02_1Node->textureID = rock02TextureID;
     rock02_1Node->position = {
-        4.0f, 1, 10
+        4.0f, 1.0f, 10.0f
     };
     rock02_1Node->rotation = {
-        0, 0, 0
+        0.0f, 0.0f, 0.0f
     };
 
     rock02_2Node = createSceneNode();
     rock02_2Node->scale = glm::vec3(2.15f);
-    rock02_2Node->nodeType = NORMAL_MAP;
+    rock02_2Node->nodeType = TEXTURE_MAP;
     rock02_2Node->textureID = rock02TextureID;
     rock02_2Node->position = {
-        2.0f, 1, -9.2
+        2.0f, 1.0f, -9.2f
     };
     rock02_2Node->rotation = {
-        0, 0, 0
+        0.0f, 0.0f, 0.0f
     };
 
     rock03Node = createSceneNode();
     rock03Node->scale = glm::vec3(2.0f);
-    rock03Node->nodeType = NORMAL_MAP;
+    rock03Node->nodeType = TEXTURE_MAP;
     rock03Node->textureID = rock03TextureID;
     rock03Node->position = {
-        -4.0f, 1.5, 0
+        -4.0f, 1.5f, 0.0f
     };
     rock03Node->rotation = {
-        0, 0.5f, 0
+        0.0f, 0.5f, 0.0f
     };
 
     bizonBonesNode = createSceneNode();
     bizonBonesNode->scale = glm::vec3(0.25f);
-    bizonBonesNode->nodeType = NORMAL_MAP;
+    bizonBonesNode->nodeType = TEXTURE_MAP;
     bizonBonesNode->textureID = bizonBonesTextureID;
     bizonBonesNode->position = {
-        7.0f, 0, -4
+        7.0f, 0.0f, -4.0f
     };
     bizonBonesNode->rotation = {
-        0, 0.7f, 0
+        0.0f, 0.7f, 0.0f
     };
 
     bizonSkullNode = createSceneNode();
     bizonSkullNode->scale = glm::vec3(0.45f);
-    bizonSkullNode->nodeType = NORMAL_MAP;
+    bizonSkullNode->nodeType = TEXTURE_MAP;
     bizonSkullNode->textureID = bizonSkullTextureID;
     bizonSkullNode->position = {
-        10.0f, 0, -3.8
+        10.0f, 0.0f, -3.8f
     };
     bizonSkullNode->rotation = {
         0.0f, -0.1f, 0.9f
@@ -361,7 +319,7 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     LightNode->id = 0;
     LightNode->color = glm::vec3(255.0, 255.0, 255.0 );
     LightNode->position  = {
-        12, 4, -1
+        12.0f, 4.0f, -1.0f
     };
     
     rootNode->children.push_back(terrainNode);
@@ -410,20 +368,14 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     terrainNode->vertexArrayObjectID = terrainVAO;
     terrainNode->VAOIndexCount       = terrain.indices.size();
 
-
-    getTimeDeltaSeconds();
-
     std::cout << fmt::format("Initialized scene with {} SceneNodes.", totalChildren(rootNode)) << std::endl;
-
     std::cout << "Ready. Click to start!" << std::endl;
 }
 
-float angle;
-void updateFrame(GLFWwindow* window) {
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    double timeDelta = getTimeDeltaSeconds();
 
-    static float angle = 0.0f; // Persistent angle between frames
+void updateFrame(GLFWwindow* window) {
+    double timeDelta = getTimeDeltaSeconds();
+    static float angle = 0.0f;
     
     // Circular motion for the light
     float radius = 4.0f;      // Radius of the circular path
@@ -432,10 +384,12 @@ void updateFrame(GLFWwindow* window) {
     // Update angle based on time (smooth continuous motion)
     angle += (float)timeDelta * speed;
     
-    // Calculate new light position in a circular path around (11, 4, -3)
-    LightNode->position.x = 11.0f + radius * cos(angle);
-    LightNode->position.z = -3.0f + radius * sin(angle);
-    LightNode->position.y = 3.0f; // Keep same height
+    // Calculate new light position in a circular path
+    LightNode->position = {
+        11.0f + radius * cos(angle),
+        3.0f,
+        -3.0f + radius * sin(angle)
+    };
 
     glm::mat4 projection = glm::perspective(glm::radians(80.0f), float(windowWidth) / float(windowHeight), 0.1f, 350.f);
 
@@ -449,35 +403,6 @@ void updateFrame(GLFWwindow* window) {
                     glm::translate(-cameraPosition);
 
     glm::mat4 VP = projection * cameraTransform;
-
-    // Move and rotate various SceneNodes
-
-    // Set positions of static lights
-    // cornerLightNode1->position  = {
-    //         boxNode->position.x - (boxDimensions.x/2) + 20,
-    //         boxNode->position.y + (boxDimensions.y/2) - 10,
-    //         boxNode->position.z - (boxDimensions.z/2) + 5
-    //     };
-        
-    // cornerLightNode2->position  = {
-    //     boxNode->position.x + (boxDimensions.x/2) - 20,
-    //     boxNode->position.y - (boxDimensions.y/2) + 10,
-    //     boxNode->position.z - (boxDimensions.z/2) + 5
-    // };
-    
-    // Alternative positions for colored shadows
-    // cornerLightNode1->position  = {
-    //     boxNode->position.x - 10,
-    //     boxNode->position.y - 37.5,
-    //     boxNode->position.z 
-    // };
-    
-    // cornerLightNode2->position  = {
-    //     boxNode->position.x + 10,
-    //     boxNode->position.y - 37.5,
-    //     boxNode->position.z
-    // };
-
     
 
     updateNodeTransformations(rootNode, glm::identity<glm::mat4>(), VP);
@@ -501,19 +426,12 @@ void updateNodeTransformations(SceneNode* node, glm::mat4 transformationThusFar,
     node->currentTransformationMatrix = viewTransformation * transformationThusFar * transformationMatrix;
     node->modelMatrix = transformationThusFar * transformationMatrix;
 
-    switch(node->nodeType) {
-        case GEOMETRY: break;
-        case POINT_LIGHT: break;
-        case SPOT_LIGHT: break;
-    }
-
     for(SceneNode* child : node->children) {
         updateNodeTransformations(child, node->modelMatrix, viewTransformation);
     }                     
 }
 
 void renderNode(SceneNode* node) {
-    // shader->activate();
     // MVP
     glUniformMatrix4fv(3, 1, GL_FALSE, glm::value_ptr(node->currentTransformationMatrix));
     // Model matrix
@@ -523,14 +441,8 @@ void renderNode(SceneNode* node) {
     glUniformMatrix3fv(5, 1, GL_FALSE, glm::value_ptr(normalMatrix));
     // Camera position
     glUniform3fv(6, 1, glm::value_ptr(cameraPosition));
-    // Ball position
-    // Make sure it's not relative
-    // glm::vec3 ballPosition = glm::vec3(ballNode->modelMatrix * glm::vec4(0.0, 0.0, 0.0, 1.0));
-    // glUniform3fv(7, 1, glm::value_ptr(ballPosition));
-    // glUniform1d(8, ballRadius);
     // Textures settings
-    glUniform1i(9, false);
-    glUniform1i(10, false);
+    glUniform1i(7, false);
 
     switch(node->nodeType) {
         case GEOMETRY:
@@ -548,20 +460,9 @@ void renderNode(SceneNode* node) {
             glUniform3fv(shader->getUniformFromName("light_source[" + std::to_string(node->id) + "].color"), 1, glm::value_ptr(node->color));
     
             break;
-        case SPOT_LIGHT: break;
-        case UI:
-            glUniform1i(9, true);
+        case TEXTURE_MAP:
+            glUniform1i(7, true);
             glBindTextureUnit(0, node->textureID);
-
-            if (node->vertexArrayObjectID != -1) {
-                glBindVertexArray(node->vertexArrayObjectID);
-                glDrawElements(GL_TRIANGLES, node->VAOIndexCount, GL_UNSIGNED_INT, nullptr);
-            }
-            break;
-        case NORMAL_MAP:
-            glUniform1i(10, true);
-            glBindTextureUnit(0, node->textureID);
-            // glBindTextureUnit(1, node->normalTextureID);
 
             if (node->vertexArrayObjectID != -1) {
                 glBindVertexArray(node->vertexArrayObjectID);

@@ -14,11 +14,7 @@ in layout(location = 3) mat3 TBN_matrix;
 uniform LightSource light_source[number_lights];
 
 uniform layout(location = 6) vec3 camera_position;
-// uniform layout(location = 7) vec3 ball_position;
-// uniform layout(location = 8) double ball_radius;
-
-uniform layout(location = 9) bool is_UI;
-uniform layout(location = 10) bool is_normal_map;
+uniform layout(location = 7) bool is_texture_map;
 
 layout(binding = 0) uniform sampler2D textureSample;
 layout(binding = 1) uniform sampler2D normalSample;
@@ -110,24 +106,16 @@ void main()
     // Normalize normals 2nd time
     vec3 normal_out = normalize(normal);
 
-    if (is_UI) {
-        // color = vec4(1.0, 1.0, 1.0, 1.0);
-        color = texture(textureSample, textureCoordinates);
-    }
-    else if (is_normal_map){
-        // Use normal map texture
-        //vec3 normalFromMap = texture(normalSample, textureCoordinates).rgb;
-        // Convert to [-1, 1] range
-        // normal_out = normalize(TBN_matrix * (normalFromMap * 2.0 - 1.0));
-
+    if (is_texture_map){
         // Compute lighting color
         vec3 litColor = calculateLight(normal_out).rgb;
 
-        // Calculate brightness (luminance)
+        // Calculate brightness
         float brightness = dot(litColor, vec3(0.299, 0.587, 0.114));
 
         color =  texture(textureSample, textureCoordinates);
 
+        // Add crosshatching
         if (brightness < 0.5) {
             if (mod(gl_FragCoord.y, 5.0) <= 1.0) {
                 color = vec4(0.0, 0.0, 0.0, 1.0);
@@ -160,38 +148,31 @@ void main()
         // Compute lighting color
         vec3 litColor = calculateLight(normal_out).rgb;
 
-        // Calculate brightness (luminance)
+        // Calculate brightness
         float brightness = dot(litColor, vec3(0.299, 0.587, 0.114));
-        
         
         color = vec4(1.0, 1.0, 1.0, 1.0);
      
-     /*
-        if (brightness < 1.00) {
-            if (mod(gl_FragCoord.x + gl_FragCoord.y, 10.0) == 0.0) {
-                color = vec4(0.0, 0.0, 0.0, 1.0);
-            }
-        }*/
-        
-        if (brightness < 0.75) {
+        // Add crosshatching
+        if (brightness < 0.5) {
             if (mod(gl_FragCoord.y, 5.0) <= 1.0) {
                 color = vec4(0.0, 0.0, 0.0, 1.0);
             }
         }
 
-        if (brightness < 0.50) {
+        if (brightness < 0.35) {
             if (mod(gl_FragCoord.x, 5.0) <= 1.0) {
                 color = vec4(0.0, 0.0, 0.0, 1.0);
             }
         }
         
-        if (brightness < 0.35) {
+        if (brightness < 0.2) {
             if (mod(gl_FragCoord.x + gl_FragCoord.y, 5.0) == 0.0) {
                 color = vec4(0.0, 0.0, 0.0, 1.0);
             }
         }
         
-        if (brightness < 0.12) {
+        if (brightness < 0.15) {
             if (mod(gl_FragCoord.x - gl_FragCoord.y, 5.0) == 0.0) {
                 color = vec4(0.0, 0.0, 0.0, 1.0);
             }
@@ -201,7 +182,7 @@ void main()
         //color = calculateLight(normal_out);
     }
 
-    
+    // Send normalTexture and linearized depthTexture for post-processing
     normalTexture = vec4(0.5 * normal_out + 0.5, 1.0);
     depthTexture = vec4(vec3(linearizeDepth(gl_FragCoord.z) / far), 1.0);
 }

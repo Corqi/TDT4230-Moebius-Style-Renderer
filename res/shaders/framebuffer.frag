@@ -68,6 +68,7 @@ void main(){
     float depthGy = 0.0;
 
     for(int i = 0; i < 9; i++) {
+        // Normal edge
         vec3 sampleNormal = texture(normalTexture, uvJitter + offsets[i]).rgb;
         sampleNormal = normalize(sampleNormal * 2.0 - 1.0);
         
@@ -78,9 +79,9 @@ void main(){
         gx += normalDiff * kernelX[i];
         gy += normalDiff * kernelY[i];
 
-        // Depth edge (using same kernel)
+        // Depth edge
         float sampleDepth = texture(depthTexture, texCoords + offsets[i]).r;
-        float depthDiff = abs(centerDepth - sampleDepth) * 50.0; // Scaled for visibility
+        float depthDiff = abs(centerDepth - sampleDepth) * 50.0;
 
         depthGx += depthDiff * kernelX[i];
         depthGy += depthDiff * kernelY[i];
@@ -90,22 +91,20 @@ void main(){
     float normalEdgeStrength = sqrt(gx*gx + gy*gy);
     float depthEdgeStrength = sqrt(depthGx*depthGx + depthGy*depthGy);
     
-    // Combine edges (using max to keep strongest signal)
+    // Combine edges
     float combinedEdge = max(normalEdgeStrength, depthEdgeStrength);
     
-    // Apply threshold (using your original style)
+    // Apply threshold
     float edge = combinedEdge > 0.3 ? 1.0 : 0.0;
     
     // Final output
     vec3 originalColor = texture(screenTexture, texCoords).rgb;
     color = vec4(originalColor * (1.0 - edge), 1.0);
     
-    // Debug views (uncomment to see different components):
-    //color = vec4(vec3(normalEdgeStrength), 1.0); // Normal edges only
-    //color = vec4(vec3(depthEdgeStrength), 1.0);  // Depth edges only
+    // Debug views:
+    //color = vec4(vec3(normalEdgeStrength), 1.0); // Normals outlines
+    //color = vec4(vec3(depthEdgeStrength), 1.0);  // Depth outlines
     //color = vec4(centerNormal*0.5+0.5, 1.0);     // Visualize normals
     //color = vec4(vec3(centerDepth), 1.0);        // Visualize depth
     //color = texture(screenTexture, texCoords);  // Visualize initial render
-    //color = vec4(vec3(linearizeDepth(centerDepth) / far), 1.0f);
-    // color = vec4(vec3(centerDepth), 1.0f);
 }

@@ -14,7 +14,7 @@
 #include <fstream>
 
 enum SceneNodeType {
-	GEOMETRY, POINT_LIGHT, SPOT_LIGHT, UI, NORMAL_MAP
+	GEOMETRY, POINT_LIGHT, TEXTURE_MAP
 };
 
 struct SceneNode {
@@ -62,7 +62,6 @@ struct SceneNode {
 
 	// Store texture ID
 	unsigned int textureID;
-	unsigned int normalTextureID;
 };
 
 SceneNode* createSceneNode();
