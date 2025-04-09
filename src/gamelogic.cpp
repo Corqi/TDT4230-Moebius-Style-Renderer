@@ -349,6 +349,13 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
         0.0f, -0.1f, 0.9f
     };
 
+    //Debug light
+    // Mesh sphere = generateSphere(0.1, 40, 40);
+    // unsigned int ballVAO = generateBuffer(sphere);
+    // LightNode = createSceneNode();
+    // LightNode->vertexArrayObjectID = ballVAO;
+    // LightNode->VAOIndexCount       = sphere.indices.size();
+
     LightNode = createSceneNode();
     LightNode->nodeType = POINT_LIGHT;
     LightNode->id = 0;
@@ -411,109 +418,24 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     std::cout << "Ready. Click to start!" << std::endl;
 }
 
+float angle;
 void updateFrame(GLFWwindow* window) {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
     double timeDelta = getTimeDeltaSeconds();
 
-    // const float ballBottomY = boxNode->position.y - (boxDimensions.y/2) + ballRadius + padDimensions.y;
-    // const float ballTopY    = boxNode->position.y + (boxDimensions.y/2) - ballRadius;
-    // const float BallVerticalTravelDistance = ballTopY - ballBottomY;
-
-    // const float cameraWallOffset = 30; // Arbitrary addition to prevent ball from going too much into camera
-
-    // const float ballMinX = boxNode->position.x - (boxDimensions.x/2) + ballRadius;
-    // const float ballMaxX = boxNode->position.x + (boxDimensions.x/2) - ballRadius;
-    // const float ballMinZ = boxNode->position.z - (boxDimensions.z/2) + ballRadius;
-    // const float ballMaxZ = boxNode->position.z + (boxDimensions.z/2) - ballRadius - cameraWallOffset;
-
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1)) {
-        mouseLeftPressed = true;
-        mouseLeftReleased = false;
-    } else {
-        mouseLeftReleased = mouseLeftPressed;
-        mouseLeftPressed = false;
-    }
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2)) {
-        mouseRightPressed = true;
-        mouseRightReleased = false;
-    } else {
-        mouseRightReleased = mouseRightPressed;
-        mouseRightPressed = false;
-    }
-
-    if(!hasStarted) {
-        if (mouseLeftPressed) {
-            if (options.enableMusic) {
-                sound = new sf::Sound();
-                sound->setBuffer(*buffer);
-                sf::Time startTime = sf::seconds(debug_startTime);
-                sound->setPlayingOffset(startTime);
-                sound->play();
-            }
-            totalElapsedTime = debug_startTime;
-            gameElapsedTime = debug_startTime;
-            hasStarted = true;
-        }
-    } else {
-        totalElapsedTime += timeDelta;
-        if(hasLost) {
-            if (mouseLeftReleased) {
-                hasLost = false;
-                hasStarted = false;
-                currentKeyFrame = 0;
-                previousKeyFrame = 0;
-            }
-        } else if (isPaused) {
-            if (mouseRightReleased) {
-                isPaused = false;
-                if (options.enableMusic) {
-                    sound->play();
-                }
-            }
-        } else {
-            gameElapsedTime += timeDelta;
-            if (mouseRightReleased) {
-                isPaused = true;
-                if (options.enableMusic) {
-                    sound->pause();
-                }
-            }
-            // Get the timing for the beat of the song
-            for (unsigned int i = currentKeyFrame; i < keyFrameTimeStamps.size(); i++) {
-                if (gameElapsedTime < keyFrameTimeStamps.at(i)) {
-                    continue;
-                }
-                currentKeyFrame = i;
-            }
-
-            jumpedToNextFrame = currentKeyFrame != previousKeyFrame;
-            previousKeyFrame = currentKeyFrame;
-
-            double frameStart = keyFrameTimeStamps.at(currentKeyFrame);
-            double frameEnd = keyFrameTimeStamps.at(currentKeyFrame + 1); // Assumes last keyframe at infinity
-
-            double elapsedTimeInFrame = gameElapsedTime - frameStart;
-            double frameDuration = frameEnd - frameStart;
-            double fractionFrameComplete = elapsedTimeInFrame / frameDuration;
-
-            double ballYCoord;
-
-            KeyFrameAction currentOrigin = keyFrameDirections.at(currentKeyFrame);
-            KeyFrameAction currentDestination = keyFrameDirections.at(currentKeyFrame + 1);
-
-            // // Synchronize ball with music
-            // if (currentOrigin == BOTTOM && currentDestination == BOTTOM) {
-            //     ballYCoord = ballBottomY;
-            // } else if (currentOrigin == TOP && currentDestination == TOP) {
-            //     ballYCoord = ballBottomY + BallVerticalTravelDistance;
-            // } else if (currentDestination == BOTTOM) {
-            //     ballYCoord = ballBottomY + BallVerticalTravelDistance * (1 - fractionFrameComplete);
-            // } else if (currentDestination == TOP) {
-            //     ballYCoord = ballBottomY + BallVerticalTravelDistance * fractionFrameComplete;
-            // }
-        }
-    }
+    static float angle = 0.0f; // Persistent angle between frames
+    
+    // Circular motion for the light
+    float radius = 4.0f;      // Radius of the circular path
+    float speed = 0.5f;       // Rotation speed in radians per second
+    
+    // Update angle based on time (smooth continuous motion)
+    angle += (float)timeDelta * speed;
+    
+    // Calculate new light position in a circular path around (11, 4, -3)
+    LightNode->position.x = 11.0f + radius * cos(angle);
+    LightNode->position.z = -3.0f + radius * sin(angle);
+    LightNode->position.y = 4.0f; // Keep same height
 
     glm::mat4 projection = glm::perspective(glm::radians(80.0f), float(windowWidth) / float(windowHeight), 0.1f, 350.f);
 
