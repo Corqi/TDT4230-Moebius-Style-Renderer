@@ -353,6 +353,9 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     LightNode->nodeType = POINT_LIGHT;
     LightNode->id = 0;
     LightNode->color = glm::vec3(255.0, 255.0, 255.0 );
+    LightNode->position  = {
+        12, 4, -1
+    };
     
     rootNode->children.push_back(terrainNode);
     terrainNode->children.push_back(cactusFlowerNode);
@@ -365,7 +368,7 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
     terrainNode->children.push_back(rock03Node);
     terrainNode->children.push_back(bizonBonesNode);
     terrainNode->children.push_back(bizonSkullNode);
-    rootNode->children.push_back(LightNode);
+    terrainNode->children.push_back(LightNode);
 
     cactusFlowerNode->vertexArrayObjectID = cactusFlowerVAO;
     cactusFlowerNode->VAOIndexCount       = cactusFlower.indices.size();
@@ -552,11 +555,6 @@ void updateFrame(GLFWwindow* window) {
     //     boxNode->position.y - 37.5,
     //     boxNode->position.z
     // };
-
-
-    LightNode->position  = {
-        0, 0, 0
-    };
 
     
 

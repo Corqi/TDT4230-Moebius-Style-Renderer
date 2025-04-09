@@ -49,6 +49,7 @@ vec4 calculateLight(vec3 normal_out){
         float lb = 0.005;
         float lc = 0.003;
         float L = 1 / (la + lb*d + lc*pow(d,2));
+        L = L*3;
 
         // Calculate shadows
         /*
@@ -128,25 +129,25 @@ void main()
 
         color =  texture(textureSample, textureCoordinates);
 
-        if (brightness < 0.75) {
+        if (brightness < 0.5) {
             if (mod(gl_FragCoord.y, 5.0) <= 1.0) {
                 color = vec4(0.0, 0.0, 0.0, 1.0);
             }
         }
 
-        if (brightness < 0.50) {
+        if (brightness < 0.35) {
             if (mod(gl_FragCoord.x, 5.0) <= 1.0) {
                 color = vec4(0.0, 0.0, 0.0, 1.0);
             }
         }
         
-        if (brightness < 0.35) {
+        if (brightness < 0.2) {
             if (mod(gl_FragCoord.x + gl_FragCoord.y, 5.0) == 0.0) {
                 color = vec4(0.0, 0.0, 0.0, 1.0);
             }
         }
         
-        if (brightness < 0.12) {
+        if (brightness < 0.15) {
             if (mod(gl_FragCoord.x - gl_FragCoord.y, 5.0) == 0.0) {
                 color = vec4(0.0, 0.0, 0.0, 1.0);
             }
@@ -154,6 +155,7 @@ void main()
 
         //debug
         //color = vec4(0.5 * normal_out + 0.5, 1.0);
+        //color = calculateLight(normal_out) * texture(textureSample, textureCoordinates);
     }
     else {
         // Compute lighting color
