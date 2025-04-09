@@ -45,11 +45,10 @@ vec4 calculateLight(vec3 normal_out){
     for (int i = 0; i < number_lights; i++) {
         // Calculate attentuation
         float d = length(light_source[i].position - fragment_position);
-        float la = 0.01;
-        float lb = 0.005;
-        float lc = 0.003;
+        float la = 0.001;
+        float lb = 0.002;
+        float lc = 0.001;
         float L = 1 / (la + lb*d + lc*pow(d,2));
-        L = L*3;
 
         // Calculate shadows
         /*

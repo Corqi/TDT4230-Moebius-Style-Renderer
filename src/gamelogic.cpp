@@ -139,27 +139,27 @@ void initGame(GLFWwindow* window, CommandLineOptions gameOptions) {
 
     PNGImage terrainTexture = loadPNGFile("../res/textures/Terrain_col.png");
     unsigned int terrainTextureID = generateTextureID(terrainTexture);
-    Mesh terrain = loadModel("../res/models/Terrain.glb");
+    Mesh terrain = loadModel("../res/models/TerrainSmooth.glb");
 
     PNGImage rock01Texture = loadPNGFile("../res/textures/Rock01_col.png");
     unsigned int rock01TextureID = generateTextureID(rock01Texture);
-    Mesh rock01 = loadModel("../res/models/Rock01.glb");
+    Mesh rock01 = loadModel("../res/models/Rock01Smooth.glb");
 
     PNGImage rock02Texture = loadPNGFile("../res/textures/Rock02_col.png");
     unsigned int rock02TextureID = generateTextureID(rock01Texture);
-    Mesh rock02 = loadModel("../res/models/Rock02.glb");
+    Mesh rock02 = loadModel("../res/models/Rock02Smooth.glb");
 
     PNGImage rock03Texture = loadPNGFile("../res/textures/Rock03_col.png");
     unsigned int rock03TextureID = generateTextureID(rock03Texture);
-    Mesh rock03 = loadModel("../res/models/Rock03.glb");
+    Mesh rock03 = loadModel("../res/models/Rock03Smooth.glb");
 
     PNGImage bizonBonesTexture = loadPNGFile("../res/textures/BizonBones_col.png");
     unsigned int bizonBonesTextureID = generateTextureID(bizonBonesTexture);
-    Mesh bizonBones = loadModel("../res/models/BizonBones.glb");
+    Mesh bizonBones = loadModel("../res/models/BizonBonesSmooth.glb");
 
     PNGImage bizonSkullTexture = loadPNGFile("../res/textures/BizonSkull_col.png");
     unsigned int bizonSkullTextureID = generateTextureID(bizonSkullTexture);
-    Mesh bizonSkull = loadModel("../res/models/BizonSkull.glb");
+    Mesh bizonSkull = loadModel("../res/models/BizonSkullSmooth.glb");
 
     // Fill buffers
     unsigned int cactusFlowerVAO = generateBuffer(cactusFlower);
@@ -435,7 +435,7 @@ void updateFrame(GLFWwindow* window) {
     // Calculate new light position in a circular path around (11, 4, -3)
     LightNode->position.x = 11.0f + radius * cos(angle);
     LightNode->position.z = -3.0f + radius * sin(angle);
-    LightNode->position.y = 4.0f; // Keep same height
+    LightNode->position.y = 3.0f; // Keep same height
 
     glm::mat4 projection = glm::perspective(glm::radians(80.0f), float(windowWidth) / float(windowHeight), 0.1f, 350.f);
 
